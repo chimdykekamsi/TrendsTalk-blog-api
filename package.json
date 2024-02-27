@@ -1,0 +1,36 @@
+{
+  "name": "trendstalk-blog-api",
+  "version": "1.0.0",
+  "description": "TrendsTalk blog api is a backend solution built with Node.Js, Express.Js and MongoDB. It provides the backend for TrendsTalk blog. This api includes all the backend functionalities for TrendsTalk blog. Including user authentication, blog management, content recommendation,hosting and managing bloggers etc.",
+  "main": "index.js",
+  "keywords": [
+    "blog",
+    "api",
+    "node",
+    "express",
+    "mongodb",
+    "TrendsTalk"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chimdykekamsi/TrendsTalk-blog-api.git"
+  },
+  "author": "Chimdyke Kamsi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chimdykekamsi/TrendsTalk-blog-api/issues"
+  },
+  "homepage": "https://github.com/chimdykekamsi/TrendsTalk-blog-api#readme",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.2.0"
+  }
+}
