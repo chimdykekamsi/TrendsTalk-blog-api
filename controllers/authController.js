@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../modules/userModule");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 
 // Method POST
 // Endpoint {baseurl}/auth/register
@@ -33,12 +34,11 @@ const registerUser = asyncHandler(
             password: hashedPassword
         });
 
-        console.log({ user });
-
         if (user) {
             return res.status(201)
                 .json({
-                    message: "Registration Successful",
+                    title: "Registration Successful",
+                    message: "User details registered with success and included to the database",
                     _id: user.id,
                     email: user.email,
                     role:user.role
@@ -50,6 +50,60 @@ const registerUser = asyncHandler(
     }
 );
 
+// Method POST
+// Endpoint {baseurl}/auth/login
+// desc login and authenticate user
+
+const loginUser = asyncHandler(
+    async (req, res, next) => {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            res.status(400);
+            throw new Error("Email and password are required!");
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            res.status(401);
+            throw new Error("Invalid email or password");
+        }
+
+        const hashedPassword = crypto
+            .createHash('sha256')  // Use the same hashing algorithm used during registration
+            .update(password)
+            .digest('hex');
+
+        if (hashedPassword === user.password) {
+            const accessToken = jwt.sign(
+                {
+                    user:{
+                        id:user.id,
+                        email:user.email,
+                        username: user.username
+                    }
+                },
+                process.env.ACCESS_TOKEN_SECRET,
+                {
+                    expiresIn: "15m"
+                }
+            )
+            return res.status(200).json({
+                title: "Login Successful",
+                message: "User loged in with success",
+                devNote: "Store this token to access secured endpoints",
+                accessToken
+            });
+        } else {
+            // Passwords do not match, authentication failed
+            res.status(401);
+            throw new Error("Invalid email or password");
+        }
+    }
+);
+
 module.exports = {
-    registerUser
+    registerUser,
+    loginUser
 };

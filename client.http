@@ -1,0 +1,9 @@
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjVkZTE3MTM4MTEzN2UzODFiNWQzZjcyIiwiZW1haWwiOiJrYW1zaTA0QGdtYWlsLmNvbSIsInVzZXJuYW1lIjoiQ2hpbWR5a2UgS2Ftc2kifSwiaWF0IjoxNzA5MDkwNzk2LCJleHAiOjE3MDkwOTE2OTZ9.IhSyiUAq9b2OqBdwkb-qQmTGQLYP3z4HhyWCJ5WDYq8
+
+{
+    "username":"Chimdyke Kamsi",
+    "email": "kamsi04@gmail.com",
+    "password":"Kamsi./2004"
+}
