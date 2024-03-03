@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 
 const registerUser = asyncHandler(
     async (req, res, next) => {
-        const { username, email, password } = req.body;
+        const { username, email, password, role } = req.body;
 
         if (!username || !email || !password) {
             res.status(400);
@@ -22,7 +22,7 @@ const registerUser = asyncHandler(
             res.status(400);
             throw new Error("User already registered");
         }
-
+        const userRole = role || "reader"; 
         const hashedPassword = crypto
             .createHash('sha256') 
             .update(password)
@@ -31,7 +31,8 @@ const registerUser = asyncHandler(
         const user = await User.create({
             username,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            role: userRole
         });
 
         if (user) {
@@ -71,7 +72,7 @@ const loginUser = asyncHandler(
         }
 
         const hashedPassword = crypto
-            .createHash('sha256')  // Use the same hashing algorithm used during registration
+            .createHash('sha256')  
             .update(password)
             .digest('hex');
 
@@ -81,12 +82,13 @@ const loginUser = asyncHandler(
                     user:{
                         id:user.id,
                         email:user.email,
-                        username: user.username
+                        username: user.username,
+                        role: user.role
                     }
                 },
                 process.env.ACCESS_TOKEN_SECRET,
                 {
-                    expiresIn: "15m"
+                    expiresIn: "60m"
                 }
             )
             return res.status(200).json({

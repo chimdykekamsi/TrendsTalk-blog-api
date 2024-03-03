@@ -51,6 +51,8 @@ web_modules/
 # Optional npm cache directory
 .npm
 
+# rest client
+client.http
 # Optional eslint cache
 .eslintcache
 
