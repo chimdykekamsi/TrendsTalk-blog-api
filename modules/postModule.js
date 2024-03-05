@@ -28,14 +28,26 @@ const postSchema = mongoose.Schema({
     ],
     likes: [
         {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            liker: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+            timestamp: {
+                type: Date,
+                default: Date.now,
+            },
         },
     ],
     dislikes: [
         {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            disliker: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+            timestamp: {
+                type: Date,
+                default: Date.now,
+            },
         },
     ],
     views: [
