@@ -94,7 +94,7 @@ const createPost = asyncHandler(
 
         const role = req.user.role;
         if (!role || role == "reader") {
-            res.status(400);
+            res.status(401);
             throw new Error("You are not authorized to create a post \n Activate your account to become a blogger");
         }else{
             const post = await Post.create({
@@ -105,7 +105,7 @@ const createPost = asyncHandler(
             });
             if (post) {
                 const {id,title,content,tags} = post;
-                res.status(201)
+                return res.status(201)
                     .json({
                         title: "Post created",
                         messge: "Post has been created and stored",
