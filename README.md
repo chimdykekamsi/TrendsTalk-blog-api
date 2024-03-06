@@ -21,7 +21,7 @@ To start your journey with TrendsTalk Blog API:
 2. **Login:** Log in with your credentials through the `/api/auth/login` endpoint.
 3. **Explore:** Discover and interact with blog posts using the available endpoints.
 
-For detailed documentation and endpoint descriptions, refer to the [Postman Collection](#).
+For detailed documentation and endpoint descriptions, refer to the [Postman Collection](https://trendstalkhub-blog-api.postman.co/workspace/Team-Workspace~c7689f10-b513-40ea-84d4-124ac858462b/collection/30476187-e1c58184-d189-4924-be6e-e85bc6a56c0a?action=share&creator=30476187).
 
 ## Contact Us
 
