@@ -2,42 +2,46 @@ const asyncHandler = require("express-async-handler");
 const Post = require("../modules/postModule");
 
 // Private function to filter Posts based on queries like tags, search etc.
-const filteredPosts = asyncHandler(
-    async (req) => {
-        const {tags,author} = req.query; 
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit)||10;
-        const skip = (page - 1) * limit;
-        let posts = await Post.find().populate('author', 'username').skip(skip).limit(limit);
+const filteredPosts = asyncHandler(async (req) => {
+    const { tags, author } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-        // Apply filters based on query parameters
-        if (tags && Array.isArray(tags)) {
-            posts = await Post.find({ tags: { $in: tags } }).populate('author', 'username').skip(skip).limit(limit);
-        }else if(tags){
-            posts = await Post.find({ tags: tags }).populate('author', 'username').skip(skip).limit(limit);
-        }
-        if(author){
-            posts = await Post.find({ username: author.username }).populate('author', 'username').skip(skip).limit(limit);
-        }
+    let posts;
 
-        let _posts = posts.map((post) => {
-            return {
-                id: post.id,
-                author: post.author.username,
-                title: post.title,
-                content: post.content,
-                date:post.createdAt,
-                tags: post.tags,
-                viewCount: post.views.length, 
-                likeCount: post.likes.length, 
-                dislikeCount: post.dislikes.length,
-                commentsCount: post.comments.length
-            };
-        });
+    // Apply filters based on query parameters
+    if (tags && Array.isArray(tags)) {
+        const tagsRegex = tags.map(tag => new RegExp(tag, 'i'));
+        posts = await Post.find({ tags: { $in: tagsRegex } }).populate('author', 'username').skip(skip).limit(limit);
+    } else if (tags) {
+        const tagsRegex = new RegExp(tags, 'i');
+        posts = await Post.find({ tags: tagsRegex }).populate('author', 'username').skip(skip).limit(limit);
+    } 
+    
+    if (author) {
+        const authorRegex = new RegExp(author.username, 'i'); 
+        posts = await Post.find({ 'author.username': authorRegex }).populate('author', 'username').skip(skip).limit(limit);
+    } 
 
-        return _posts;
-    }
-);
+    let _posts = posts.map((post) => {
+        return {
+            id: post.id,
+            author: post.author.username,
+            title: post.title,
+            content: post.content,
+            date: post.createdAt,
+            tags: post.tags,
+            viewCount: post.views.length,
+            likeCount: post.likes.length,
+            dislikeCount: post.dislikes.length,
+            commentsCount: post.comments.length
+        };
+    });
+
+    return _posts;
+});
+
 
 
 // Method GET
@@ -55,7 +59,7 @@ const getAllPosts = asyncHandler(
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit)||10;
             const skip = (page - 1) * limit;
-            const posts = await Post.find().populate('author', 'username').skip(skip).limit(limit);
+            const posts = await Post.find().populate('author', 'username').sort({views: -1}).skip(skip).limit(limit);
 
             _posts = posts.map((post) => {
                 return {
@@ -221,10 +225,94 @@ const searchPosts = asyncHandler(async (req, res, next) => {
     res.status(200).json(_posts);
 });
 
+// Method GET
+// Endpoint {baseUrl}/posts/feed
+// Desc Get a personalized feed based on user preferences (viewed and liked posts)
+// Access Authorized Users
+
+const feed = asyncHandler(
+    async(req,res,next)=>{
+        try {
+            const user = req.user;
+    
+            // Retrieve user's liked posts
+            const userLikedPosts = await Post.find({ 'likes.liker': user.id });
+    
+            // Retrieve user's viewed posts
+            const userViewedPosts = await Post.find({ 'views.viewer': user.id });
+    
+            // Combine and deduplicate liked and viewed posts
+            const userInteractions = [...userLikedPosts, ...userViewedPosts];
+            const uniqueInteractions = Array.from(new Set(userInteractions.map(post => post.id)))
+                .map(id => userInteractions.find(post => post.id === id));
+
+
+            // If the user hasn't liked any post yet, prioritize by most liked posts
+            if (userLikedPosts.length === 0 && userViewedPosts.length === 0) {
+                console.log("reached here");
+                const allPosts = await Post.find();
+                const sortedPosts = allPosts.sort((a, b) => b.likes.length - a.likes.length);
+                const userFeed = sortedPosts.slice(0, 10); // Adjust the number of posts to show
+    
+                // Format the response as needed
+                const formattedFeed = userFeed.map(post => ({
+                    id: post.id,
+                    author: post.author.username,
+                    title: post.title,
+                    content: post.content,
+                    date: post.createdAt,
+                    tags: post.tags,
+                    viewsCount: post.views.length,
+                    likesCount: post.likes.length,
+                    dislikesCount: post.dislikes.length,
+                    commentsCount: post.comments.length
+                }));
+    
+                return res.status(200).json(formattedFeed);
+            }
+    
+            // Sort posts by most views and likes
+            const sortedPosts = uniqueInteractions.sort((a, b) => {
+                const aInteractionCount = a.views.length + a.likes.length;
+                const bInteractionCount = b.views.length + b.likes.length;
+                return bInteractionCount - aInteractionCount;
+            });
+    
+            // Retrieve tags of liked or viewed posts
+            const userTags = sortedPosts.reduce((tags, post) => {
+                return tags.concat(post.tags);
+            }, []);
+    
+            // Filter personalized feed based on user's tags
+            const userFeed = await Post.find({ tags: { $in: userTags } });
+    
+            // Format the response as needed
+            const formattedFeed = userFeed.map(post => ({
+                id: post.id,
+                author: post.author.username,
+                title: post.title,
+                content: post.content,
+                date: post.createdAt,
+                tags: post.tags,
+                viewsCount: post.views.length,
+                likesCount: post.likes.length,
+                dislikesCount: post.dislikes.length,
+                commentsCount: post.comments.length
+            }));
+    
+            res.status(200).json(formattedFeed);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+        
+    }
+);
 
 module.exports = {
     getAllPosts,
     createPost,
     getPost,
-    searchPosts
+    searchPosts,
+    feed
 }
