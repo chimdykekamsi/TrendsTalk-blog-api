@@ -105,7 +105,21 @@ const loginUser = asyncHandler(
     }
 );
 
+// Method POST
+// Endpoint {baseurl}/auth/validate-token
+// desc validate the access token and return the user details
+
+const currentUser = asyncHandler(
+    async(req, res, next) => {
+        const {id} = req.user;
+        const user = await User.findById(id);
+        return res.status(200)
+        .json({user})
+    }
+)
+
 module.exports = {
     registerUser,
-    loginUser
+    loginUser,
+    currentUser
 };

@@ -18,6 +18,10 @@ const userSchema = mongoose.Schema({
         required:false,
         default:"reader"
     }
-})
+},
+    {
+        timesstamps: true
+    }
+)
 
 module.exports = mongoose.model("User", userSchema);
