@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Post = require("../modules/postModule");
+const Category = require("../modules/categoryModule");
 
 // Private function to filter Posts based on queries like tags, search etc.
 const filteredPosts = asyncHandler(async (req) => {
@@ -13,15 +14,15 @@ const filteredPosts = asyncHandler(async (req) => {
     // Apply filters based on query parameters
     if (tags && Array.isArray(tags)) {
         const tagsRegex = tags.map(tag => new RegExp(tag, 'i'));
-        posts = await Post.find({ tags: { $in: tagsRegex } }).populate('author', 'username').skip(skip).limit(limit);
+        posts = await Post.find({ tags: { $in: tagsRegex } }).populate('author', 'username').populate('category','title').skip(skip).limit(limit);
     } else if (tags) {
         const tagsRegex = new RegExp(tags, 'i');
-        posts = await Post.find({ tags: tagsRegex }).populate('author', 'username').skip(skip).limit(limit);
+        posts = await Post.find({ tags: tagsRegex }).populate('author', 'username').populate('category','title').skip(skip).limit(limit);
     } 
     
     if (author) {
         const authorRegex = new RegExp(author.username, 'i'); 
-        posts = await Post.find({ 'author.username': authorRegex }).populate('author', 'username').skip(skip).limit(limit);
+        posts = await Post.find({ 'author.username': authorRegex }).populate('author', 'username').populate('category','title').skip(skip).limit(limit);
     } 
 
     let _posts = posts.map((post) => {
@@ -32,6 +33,7 @@ const filteredPosts = asyncHandler(async (req) => {
             content: post.content,
             date: post.createdAt,
             tags: post.tags,
+            category: post.category,
             viewCount: post.views.length,
             likeCount: post.likes.length,
             dislikeCount: post.dislikes.length,
@@ -59,7 +61,7 @@ const getAllPosts = asyncHandler(
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit)||10;
             const skip = (page - 1) * limit;
-            const posts = await Post.find().populate('author', 'username').sort({views: -1}).skip(skip).limit(limit);
+            const posts = await Post.find().populate('author', 'username').populate('category','title').sort({views: -1}).skip(skip).limit(limit);
 
             _posts = posts.map((post) => {
                 return {
@@ -67,6 +69,7 @@ const getAllPosts = asyncHandler(
                     author: post.author.username,
                     title: post.title,
                     content: post.content,
+                    category: post.category.title || null,
                     tags: post.tags,
                     date:post.createdAt,
                     viewsCount: post.views.length, // Using virtual property
@@ -89,9 +92,9 @@ const getAllPosts = asyncHandler(
 
 const createPost = asyncHandler(
     async (req, res, next) => {
-        const {title,content,tags} = req.body;
+        const {title,content,tags,category} = req.body;
 
-        if (!title || !content) {
+        if (!title || !content || !tags) {
             res.status(400);
             throw new Error("All fields are required!");
         }
@@ -105,9 +108,17 @@ const createPost = asyncHandler(
                 author: req.user.id,
                 title,
                 content,
-                tags
+                tags,
+                category
             });
             if (post) {
+                const _category = await Category.findById(category);
+                if (!_category) {
+                    res.status(404);
+                    throw new Error("Category Selected for this post does not exist")
+                }
+                _category.posts.push(post.id);
+                _category.save();
                 const {id,title,content,tags} = post;
                 return res.status(201)
                     .json({
@@ -136,7 +147,7 @@ const getPost = asyncHandler(async (req, res, next) => {
     const viewerID = req.user.id;
 
     try {
-        const post = await Post.findById(postID).populate('author', 'username');
+        const post = await Post.findById(postID).populate('category','title').populate('author', 'username');
 
         if (!post) {
             res.status(404);
@@ -156,6 +167,7 @@ const getPost = asyncHandler(async (req, res, next) => {
             author: post.author.username, // Access username through the populated author field
             title: post.title,
             content: post.content,
+            category: post.category.title,
             tags: post.tags,
             date:post.createdAt,
             views: post.views, 
@@ -233,6 +245,10 @@ const searchPosts = asyncHandler(async (req, res, next) => {
 const feed = asyncHandler(
     async(req,res,next)=>{
         try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit)||10;
+            const skip = (page - 1) * limit;
+
             const user = req.user;
     
             // Retrieve user's liked posts
@@ -247,15 +263,25 @@ const feed = asyncHandler(
                 .map(id => userInteractions.find(post => post.id === id));
 
 
+            // Sort posts by most views and likes
+            const sortedPosts = uniqueInteractions.sort((a, b) => {
+                const aInteractionCount = a.views.length + a.likes.length;
+                const bInteractionCount = b.views.length + b.likes.length;
+                return bInteractionCount - aInteractionCount;
+            });
+    
+            // Retrieve tags of liked or viewed posts
+            const userTags = sortedPosts.reduce((tags, post) => {
+                return tags.concat(post.tags);
+            }, []);
+
+            
             // If the user hasn't liked any post yet, prioritize by most liked posts
-            if (userLikedPosts.length === 0 && userViewedPosts.length === 0) {
-                console.log("reached here");
-                const allPosts = await Post.find();
-                const sortedPosts = allPosts.sort((a, b) => b.likes.length - a.likes.length);
-                const userFeed = sortedPosts.slice(0, 10); // Adjust the number of posts to show
+            if (userTags < 1) {
+                const posts = await Post.find().populate('author', 'username').sort({views: -1}).skip(skip).limit(limit);
     
                 // Format the response as needed
-                const formattedFeed = userFeed.map(post => ({
+                const formattedFeed = posts.map(post => ({
                     id: post.id,
                     author: post.author.username,
                     title: post.title,
@@ -271,18 +297,7 @@ const feed = asyncHandler(
                 return res.status(200).json(formattedFeed);
             }
     
-            // Sort posts by most views and likes
-            const sortedPosts = uniqueInteractions.sort((a, b) => {
-                const aInteractionCount = a.views.length + a.likes.length;
-                const bInteractionCount = b.views.length + b.likes.length;
-                return bInteractionCount - aInteractionCount;
-            });
-    
-            // Retrieve tags of liked or viewed posts
-            const userTags = sortedPosts.reduce((tags, post) => {
-                return tags.concat(post.tags);
-            }, []);
-    
+
             // Filter personalized feed based on user's tags
             const userFeed = await Post.find({ tags: { $in: userTags } });
     

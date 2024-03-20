@@ -17,7 +17,7 @@ const postSchema = mongoose.Schema({
     tags: [
         {
             type: String,
-            required: false,
+            required: [true, "This field is required"],
         },
     ],
     comments: [
@@ -66,6 +66,10 @@ const postSchema = mongoose.Schema({
         type: Map,
         of: String,
         required: false,
+    },
+    category:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category"
     }
 },
     {

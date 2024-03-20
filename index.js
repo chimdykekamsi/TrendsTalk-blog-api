@@ -4,6 +4,7 @@ require("dotenv").config();
 const cors = require("cors");  // Import the cors middleware
 const authRoute = require("./routes/authRoute");
 const postRoute = require("./routes/postRoute");
+const categoryRoute = require("./routes/categoryRoute");
 const errorHandler = require("./middlewares/errorHandler");
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoute);
 app.use('/api/posts', postRoute);
+app.use('/api/categories', categoryRoute);
 
 app.use(errorHandler);
 
