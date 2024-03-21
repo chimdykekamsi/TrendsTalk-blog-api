@@ -111,8 +111,7 @@ const loginUser = asyncHandler(
 
 const currentUser = asyncHandler(
     async(req, res, next) => {
-        const {id} = req.user;
-        const user = await User.findById(id);
+        const user = req.user;
         return res.status(200)
         .json({user})
     }
