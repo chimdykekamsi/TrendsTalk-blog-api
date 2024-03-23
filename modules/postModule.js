@@ -62,7 +62,7 @@ const postSchema = mongoose.Schema({
             },
         }
     ],
-    images: {
+    media: {
         type: Map,
         of: String,
         required: false,

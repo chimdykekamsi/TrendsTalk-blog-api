@@ -9,6 +9,8 @@ router.route('/')
     .post(validateToken,createCategory)
 
 router.route('/:categoryId')
-    .get(getCategory);
+    .get(getCategory)
+    .put(getCategory)
+    .delete(getCategory)
 
 module.exports = router;
