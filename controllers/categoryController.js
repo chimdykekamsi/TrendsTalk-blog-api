@@ -8,7 +8,19 @@ const get_cat_posts = asyncHandler(
         const categoryPosts = await Post.find({category:categoryId});
         let _categoryPosts = [];
         _categoryPosts = categoryPosts.map((post) => {
-            return post
+            return {
+                id: post.id,
+                    author: post.author.username,
+                    title: post.title,
+                    content: post.content,
+                    category: post.category.title || null,
+                    tags: post.tags,
+                    date:post.createdAt,
+                    viewsCount: post.views.length, // Using virtual property
+                    likesCount: post.likes.length, // Using virtual property
+                    dislikesCount: post.dislikes.length, // Using virtual property
+                    commentsCount: post.comments.length
+            }
         });
         return _categoryPosts;
     }
