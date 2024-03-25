@@ -61,7 +61,7 @@ const getAllPosts = asyncHandler(
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit)||10;
             const skip = (page - 1) * limit;
-            const posts = await Post.find().populate('author', 'username').populate('category','title').sort({views: -1}).skip(skip).limit(limit);
+            const posts = await Post.find().populate('author', 'username').populate('category','title').sort({createdAt: -1}).skip(skip).limit(limit);
 
             _posts = posts.map((post) => {
                 return {
