@@ -70,7 +70,6 @@ const getAllPosts = asyncHandler(
                     title: post.title,
                     content: post.content,
                     category: post.category.title || null,
-                    categoryId: post.category._id,
                     tags: post.tags,
                     date:post.createdAt,
                     viewsCount: post.views.length, // Using virtual property
@@ -169,6 +168,7 @@ const getPost = asyncHandler(async (req, res, next) => {
             title: post.title,
             content: post.content,
             category: post.category.title,
+            categoryId: post.category._id,
             tags: post.tags,
             date:post.createdAt,
             views: post.views, 
