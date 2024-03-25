@@ -70,6 +70,7 @@ const getAllPosts = asyncHandler(
                     title: post.title,
                     content: post.content,
                     category: post.category.title || null,
+                    categoryId: post.category,
                     tags: post.tags,
                     date:post.createdAt,
                     viewsCount: post.views.length, // Using virtual property
