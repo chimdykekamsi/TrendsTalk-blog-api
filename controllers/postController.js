@@ -94,7 +94,7 @@ const createPost = asyncHandler(
     async (req, res, next) => {
         const {title,content,tags,category} = req.body;
 
-        if (!title || !content || !tags) {
+        if (!title || !content || !tags || !category) {
             res.status(400);
             throw new Error("All fields are required!");
         }
@@ -104,6 +104,11 @@ const createPost = asyncHandler(
             res.status(401);
             throw new Error("You are not authorized to create a post \n Activate your account to become a blogger");
         }else{
+            const _category = await Category.findById(category);
+            if (!_category) {
+                res.status(404);
+                throw new Error("Category Selected for this post does not exist")
+            }
             const post = await Post.create({
                 author: req.user.id,
                 title,
@@ -111,12 +116,7 @@ const createPost = asyncHandler(
                 tags,
                 category
             });
-            if (post) {
-                const _category = await Category.findById(category);
-                if (!_category) {
-                    res.status(404);
-                    throw new Error("Category Selected for this post does not exist")
-                }
+            if (post) {                
                 _category.posts.push(post.id);
                 _category.save();
                 const {id,title,content,tags} = post;
