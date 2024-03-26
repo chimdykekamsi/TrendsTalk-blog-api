@@ -10,16 +10,15 @@ const get_cat_posts = asyncHandler(
         _categoryPosts = categoryPosts.map((post) => {
             return {
                 id: post.id,
-                    author: post.author.username,
-                    title: post.title,
-                    content: post.content,
-                    category: post.category.title || null,
-                    tags: post.tags,
-                    date:post.createdAt,
-                    viewsCount: post.views.length, // Using virtual property
-                    likesCount: post.likes.length, // Using virtual property
-                    dislikesCount: post.dislikes.length, // Using virtual property
-                    commentsCount: post.comments.length
+                author: post.author.username,
+                title: post.title,
+                content: post.content,
+                tags: post.tags,
+                date:post.createdAt,
+                viewsCount: post.views.length, // Using virtual property
+                likesCount: post.likes.length, // Using virtual property
+                dislikesCount: post.dislikes.length, // Using virtual property
+                commentsCount: post.comments.length
             }
         });
         return _categoryPosts;

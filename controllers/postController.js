@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Post = require("../modules/postModule");
+const User = require("../modules/userModule");
 const Category = require("../modules/categoryModule");
 
 // Private function to filter Posts based on queries like tags, search etc.
@@ -195,30 +196,29 @@ const getPost = asyncHandler(async (req, res, next) => {
 // Access Every User
 
 const searchPosts = asyncHandler(async (req, res, next) => {
-    const { query, tags, author } = req.query;
+    const { query } = req.query;
     let _posts = [];
 
     if (!query) {
         res.status(400);
         throw new Error("Search term is required");
     }
+
     let searchQuery = {
         $or: [
             { title: { $regex: query, $options: 'i' } },
-            { content: { $regex: query, $options: 'i' } }
+            { content: { $regex: query, $options: 'i' } },
+            { tags: { $regex: query, $options: 'i' } }
         ],
     };
 
-    if (tags && Array.isArray(tags)) {
-        searchQuery.tags = { $in: tags };
-    } else if (tags) {
-        searchQuery.tags = tags;
+    const user = await User.findOne({ username: { $regex: query, $options: 'i' }  });
+    // console.log(user);
+    if (user) {
+        searchQuery.$or.push({ 'author': user._id });
     }
 
-    if (author) {
-        searchQuery['author.username'] = { $regex: author, $options: 'i' };
-    }
-
+    console.log(searchQuery);
     const posts = await Post.find(searchQuery).populate('author', 'username');
 
     _posts = posts.map((post) => {
