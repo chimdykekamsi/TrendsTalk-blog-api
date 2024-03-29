@@ -5,7 +5,7 @@ const validateToken = asyncHandler(
     async(req,res,next) =>{
         const authHeader = req.headers.authorization || req.headers.Authorization;
         if(!authHeader){
-            return res.status(404).json({
+            return res.status(401).json({
                 message: "No token provided"
             });
         }

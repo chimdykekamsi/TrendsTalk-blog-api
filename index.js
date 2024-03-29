@@ -1,7 +1,12 @@
 const express = require("express");
 const _db = require("./config/dbConnection");
 require("dotenv").config();
-const cors = require("cors");  // Import the cors middleware
+const cors = require("cors"); 
+
+const swaggerUi = require("swagger-ui-express");
+const YAML = require("yamljs");
+const swaggerJsDocs = YAML.load('./utils/swagger.yaml');
+
 const authRoute = require("./routes/authRoute");
 const postRoute = require("./routes/postRoute");
 const categoryRoute = require("./routes/categoryRoute");
@@ -23,6 +28,8 @@ app.use('/api/posts', postRoute);
 app.use('/api/categories', categoryRoute);
 
 app.use(errorHandler);
+
+app.use("/",swaggerUi.serve,swaggerUi.setup(swaggerJsDocs));
 
 _db().then(() => {
     app.listen(PORT, () => {

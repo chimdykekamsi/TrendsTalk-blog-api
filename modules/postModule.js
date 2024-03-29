@@ -62,11 +62,20 @@ const postSchema = mongoose.Schema({
             },
         }
     ],
-    media: {
-        type: Map,
-        of: String,
-        required: false,
-    },
+    images: [
+        {
+            caption:{
+                type: String
+            },
+            url:{
+                type: String
+            },
+            timestamp: {
+                type: Date,
+                default: Date.now,
+            },
+        }
+    ],
     category:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category"

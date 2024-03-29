@@ -1,0 +1,219 @@
+openapi: 3.0.3
+info: 
+  title: TrendsTalk Blog API
+  description: TrendsTalk Blog API offers a suite of powerful features designed to streamline your blogging experience. From user registration to post creation and exploration, our API provides robust functionality to cater to your blogging needs.
+  version: 1.0.0
+  contact:
+    email: ckamsi04@gmail.com
+servers:
+  - url: http://localhost:3000/api
+  - url: https://trendstalk-blog-api.onrender.com/api
+
+schemes: [http,https]
+
+tags:
+  - name: post
+    description: All endpoints relating to posts
+
+paths:
+
+  /posts/:
+    get:
+      tags:
+        - post
+      summary: Fetch all existing posts
+      parameters:
+        - name: tags
+          in: query
+          description: filter the post returned by tags
+          required: false
+          schema:
+            type: string
+            items:
+              type: string
+        - name: author
+          in: query
+          description: filter the post returned by favorite author
+          required: false
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        500:
+          description: Internal Server Error
+
+    post:
+      tags:
+        - post
+      summary: Create a new post
+      requestBody:
+        content:
+          application/json:
+            schema:
+             $ref: '#/components/schemas/Post'
+             required: true
+             description: The post to create   
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad request
+      security:
+        - BearerAuth: []
+
+  /posts/search:
+    get:
+      tags:
+        - post
+      summary: Fetch post by query
+      description: Uses the query provided to filter all posts by title, content, tags or author.
+      parameters:
+        - name: query
+          in: query
+          description: Specify the search terms
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not Found
+        400:
+          description: Bad Request
+
+  /posts/{id}:
+    get:
+      tags:
+        - post
+      summary: Fetch a single post by id
+      parameters:
+        - name: id
+          in: path
+          description: Specify the Id of the post you wish to fetch
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    Post:
+      type: object
+      required:
+        - title
+        - content
+        - author
+      properties:
+        _id:
+          type: string
+          description: Unique identifier for the post.
+        author:
+          type: string
+          description: ID of the author of the post.
+        title:
+          type: string
+          description: Title of the post.
+        content:
+          type: string
+          description: Content of the post.
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags associated with the post.
+        comments:
+          type: array
+          items:
+            type: string
+          description: Comments on the post.
+        likes:
+          type: array
+          items:
+            type: object
+            properties:
+              liker:
+                type: string
+                description: ID of the user who liked the post.
+              timestamp:
+                type: string
+                format: date-time
+                description: Timestamp when the like was added.
+          description: Users who liked the post.
+        dislikes:
+          type: array
+          items:
+            type: object
+            properties:
+              disliker:
+                type: string
+                description: ID of the user who disliked the post.
+              timestamp:
+                type: string
+                format: date-time
+                description: Timestamp when the dislike was added.
+          description: Users who disliked the post.
+        views:
+          type: array
+          items:
+            type: object
+            properties:
+              viewer:
+                type: string
+                description: ID of the user who viewed the post.
+              timestamp:
+                type: string
+                format: date-time
+                description: Timestamp when the view occurred.
+          description: Users who viewed the post.
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              caption:
+                type: string
+                description: Caption associated with each image.
+              url:
+                type: string
+                description: path to the image
+              timestamp:
+                type: string
+                format: date-time
+                description: Timestamp when the image was added.
+          description: Users who viewed the post.
+        category:
+          type: string
+          description: ID of the category associated with the post.
+      example:
+        title: "Sample Post"
+        content: "This is a sample post content."
+        tags:
+          - "sample"
+          - "example"
+        category: 65fad9528653a1ac7366cffe
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      name: BearerAuth
+      in: header

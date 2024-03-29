@@ -15,8 +15,15 @@ const registerUser = asyncHandler(
             res.status(400);
             throw new Error("All fields are required!");
         }
+        
+        const containsSpaces = /\s/.test(username);
+        if (containsSpaces) {
+            res.status(400);
+            throw new Error("Username cannot contain spaces");
+        }
 
-        const userAvailable = await User.findOne({ email });
+
+        const userAvailable = await User.findOne({ $or: [{ email: email }, { username: username }] });
 
         if (userAvailable) {
             res.status(400);

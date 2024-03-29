@@ -14,16 +14,19 @@ const filteredPosts = asyncHandler(async (req) => {
 
     // Apply filters based on query parameters
     if (tags && Array.isArray(tags)) {
-        const tagsRegex = tags.map(tag => new RegExp(tag, 'i'));
+        const tagsRegex = tags.map(tag => tag);
         posts = await Post.find({ tags: { $in: tagsRegex } }).populate('author', 'username').populate('category','title').skip(skip).limit(limit);
     } else if (tags) {
-        const tagsRegex = new RegExp(tags, 'i');
+        const tagsRegex = tags;
         posts = await Post.find({ tags: tagsRegex }).populate('author', 'username').populate('category','title').skip(skip).limit(limit);
     } 
     
     if (author) {
-        const authorRegex = new RegExp(author.username, 'i'); 
-        posts = await Post.find({ 'author.username': authorRegex }).populate('author', 'username').populate('category','title').skip(skip).limit(limit);
+        const user = await User.findOne({ username: { $regex: author, $options: 'i' }  });
+        if (user) {
+            posts = await Post.find({ 'author': user._id }).populate('author', 'username').populate('category','title').skip(skip).limit(limit);
+        }
+        
     } 
 
     let _posts = posts.map((post) => {
@@ -58,6 +61,11 @@ const getAllPosts = asyncHandler(
 
         if (req.query.tags || req.query.author) {
             _posts = await filteredPosts(req);
+            
+            if (_posts.length < 1) {
+                res.status(404);
+                throw new Error("No post mmatches your query")
+            }
         }else{
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit)||10;
@@ -213,12 +221,10 @@ const searchPosts = asyncHandler(async (req, res, next) => {
     };
 
     const user = await User.findOne({ username: { $regex: query, $options: 'i' }  });
-    // console.log(user);
     if (user) {
         searchQuery.$or.push({ 'author': user._id });
     }
 
-    console.log(searchQuery);
     const posts = await Post.find(searchQuery).populate('author', 'username');
 
     _posts = posts.map((post) => {
@@ -234,7 +240,10 @@ const searchPosts = asyncHandler(async (req, res, next) => {
             dislikes: post.dislikes.length,
         };
     });
-
+    if (_posts.length < 1) {
+        res.status(404);
+        throw new Error("No post mmatches your query please confirm your seach query")
+    }
     res.status(200).json(_posts);
 });
 
