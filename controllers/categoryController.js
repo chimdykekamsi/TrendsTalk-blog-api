@@ -59,11 +59,13 @@ const getCategory = asyncHandler(
     async(req,res,next) => {
         const {categoryTitle} = req.params;
         const category = await Category.findOne({ title: { $regex: new RegExp('^' + categoryTitle + '$', 'i') } });
-        const categoryId = category.id;
+        
         if (!category) {
             res.status(404);
             throw new Error("Category not found");
         };
+        
+        const categoryId = category.id;
         const posts = await get_cat_posts(categoryId);
         return res.status(200)
         .json({
