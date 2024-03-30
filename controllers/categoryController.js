@@ -57,8 +57,9 @@ const getAllCategories = asyncHandler(
 
 const getCategory = asyncHandler(
     async(req,res,next) => {
-        const {categoryId} = req.params;
-        const category = await Category.findById(categoryId);
+        const {categoryTitle} = req.params;
+        const category = await Category.findOne({ title: { $regex: new RegExp('^' + categoryTitle + '$', 'i') } });
+        const categoryId = category.id;
         if (!category) {
             res.status(404);
             throw new Error("Category not found");

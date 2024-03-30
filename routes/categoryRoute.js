@@ -8,7 +8,7 @@ router.route('/')
     .get(getAllCategories)
     .post(validateToken,createCategory)
 
-router.route('/:categoryId')
+router.route('/:categoryTitle')
     .get(getCategory)
     .put(getCategory)
     .delete(getCategory)
