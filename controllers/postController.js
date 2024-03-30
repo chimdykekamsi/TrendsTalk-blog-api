@@ -2,6 +2,20 @@ const asyncHandler = require("express-async-handler");
 const Post = require("../modules/postModule");
 const User = require("../modules/userModule");
 const Category = require("../modules/categoryModule");
+const path = require("path");
+require("dotenv").config();
+
+const multer = require("multer");
+const storage = multer.diskStorage({
+    destination: (req, file, cb)=>{
+        cb(null, "../uploads/posts")
+    },
+    filename: (req, file, cb)=>{
+        cb(null, Date.now + path.extname(file.originalName))
+    }
+});
+
+const upload = multer({storage})
 
 // Private function to filter Posts based on queries like tags, search etc.
 const filteredPosts = asyncHandler(async (req) => {
@@ -101,9 +115,13 @@ const getAllPosts = asyncHandler(
 
 const createPost = asyncHandler(
     async (req, res, next) => {
+        upload.array('images', 5)(req, res, async (err) => {
+    
         const {title,content,tags,category} = req.body;
+        const  images = req.files;
+        console.log({images})
 
-        if (!title || !content || !tags || !category) {
+        if (!title || !content || !tags || !category || !images || images <= 0) {
             res.status(400);
             throw new Error("All fields are required!");
         }
@@ -118,12 +136,18 @@ const createPost = asyncHandler(
                 res.status(404);
                 throw new Error("Category Selected for this post does not exist")
             }
+            const imageObjects = images.map(image => ({
+                caption: image.originalname, 
+                url: process.env.APP_URL + image.path
+            }));
+    
             const post = await Post.create({
                 author: req.user.id,
                 title,
                 content,
                 tags,
-                category
+                category,
+                images: imageObjects
             });
             if (post) {                
                 _category.posts.push(post.id);
@@ -142,7 +166,7 @@ const createPost = asyncHandler(
                     })
             }
         }
-    }
+    })}
 );
 
 
@@ -166,7 +190,7 @@ const getPost = asyncHandler(async (req, res, next) => {
         // Check if the viewer has already viewed the post
         const hasViewed = post.views.some((view) => view.viewer.equals(viewerID));
 
-        if (!hasViewed) {
+        if (!hasViewed && viewerID !== "unsigned") {
             // If the viewer hasn't viewed the post, increment views and add the viewer
             post.views.push({ viewer: viewerID });
             await post.save();
