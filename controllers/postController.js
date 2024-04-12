@@ -107,7 +107,8 @@ const createPost = asyncHandler(
     
         const {title,content,tags,category} = req.body;
         const images = req.files;
-        if (!title || !content || !tags || !category) {
+        console.log({images});
+        if (!title || !content || !tags || !category || !images || images.length < 1) {
             res.status(400);
             throw new Error("All fields are required!");
         }
