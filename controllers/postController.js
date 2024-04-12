@@ -17,10 +17,12 @@ const filteredPosts = asyncHandler(async (req) => {
 
     // Apply filters based on query parameters
     if (tags && Array.isArray(tags)) {
-        const tagsRegex = tags.map(tag => tag);
+        // Convert each tag to a case-insensitive regular expression
+        const tagsRegex = tags.map(tag => new RegExp(tag, 'i'));
         posts = await Post.find({ tags: { $in: tagsRegex } }).populate('author', 'username').populate('category','title').skip(skip).limit(limit);
     } else if (tags) {
-        const tagsRegex = tags;
+        // Convert the single tag to a case-insensitive regular expression
+        const tagsRegex = new RegExp(tags, 'i');
         posts = await Post.find({ tags: tagsRegex }).populate('author', 'username').populate('category','title').skip(skip).limit(limit);
     } 
     
