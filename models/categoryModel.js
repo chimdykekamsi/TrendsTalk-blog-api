@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const categoryModule = mongoose.Schema({
+const categoryModel = mongoose.Schema({
     title: {
         type: String,
         require: [true, "title cannot be null"]
@@ -17,4 +17,4 @@ const categoryModule = mongoose.Schema({
     }
 )
 
-module.exports = mongoose.model("Category",categoryModule);
+module.exports = mongoose.model("Category",categoryModel);

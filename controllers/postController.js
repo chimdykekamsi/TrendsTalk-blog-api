@@ -1,21 +1,10 @@
 const asyncHandler = require("express-async-handler");
-const Post = require("../modules/postModule");
-const User = require("../modules/userModule");
-const Category = require("../modules/categoryModule");
+const Post = require("../models/postModel");
+const User = require("../models/userModel");
+const Category = require("../models/categoryModel");
 const path = require("path");
 require("dotenv").config();
 
-const multer = require("multer");
-const storage = multer.diskStorage({
-    destination: (req, file, cb)=>{
-        cb(null, "../uploads/posts")
-    },
-    filename: (req, file, cb)=>{
-        cb(null, Date.now + path.extname(file.originalName))
-    }
-});
-
-const upload = multer({storage})
 
 // Private function to filter Posts based on queries like tags, search etc.
 const filteredPosts = asyncHandler(async (req) => {
@@ -115,13 +104,11 @@ const getAllPosts = asyncHandler(
 
 const createPost = asyncHandler(
     async (req, res, next) => {
-        upload.array('images', 5)(req, res, async (err) => {
     
         const {title,content,tags,category} = req.body;
-        const  images = req.files;
-        console.log({images})
-
-        if (!title || !content || !tags || !category || !images || images <= 0) {
+        const images = req.files;
+        console.log({images});
+        if (!title || !content || !tags || !category || !images || images.length < 1) {
             res.status(400);
             throw new Error("All fields are required!");
         }
@@ -137,8 +124,8 @@ const createPost = asyncHandler(
                 throw new Error("Category Selected for this post does not exist")
             }
             const imageObjects = images.map(image => ({
-                caption: image.originalname, 
-                url: process.env.APP_URL + image.path
+                caption: path.parse(image.originalname).name, 
+                url: `${process.env.APP_URL}/uploads/posts/${image.filename}`
             }));
     
             const post = await Post.create({
@@ -166,8 +153,7 @@ const createPost = asyncHandler(
                     })
             }
         }
-    })}
-);
+});
 
 
 // Method GET

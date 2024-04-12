@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler");
-const User = require("../modules/userModule");
+const User = require("../models/userModel");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 

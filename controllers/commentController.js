@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
-const Comment = require("../modules/commentModule");
-const Post = require("../modules/postModule");
+const Comment = require("../models/commentModel");
+const Post = require("../models/postModel");
 
 // Method GET
 // Endpoint {baseUrl}/posts/:postID/comments
@@ -11,7 +11,7 @@ const getAllComments = asyncHandler(
     async(req,res,next)=>{
         let _comments = [];
         const {postID} = req.params;
-        const comments = await Comment.find({post:postID}).populate('post','title').populate('user','username');
+        const comments = await Comment.find({post:postID}).populate('user','username');
 
         if (!comments) {
             res.status(404);
@@ -21,7 +21,6 @@ const getAllComments = asyncHandler(
         _comments = comments.map((_comment) => {
             const {user,post,comment,likes,dislikes} = _comment;
             return{
-                post: post.title,
                 user: user.username,
                 comment,
                 likes,

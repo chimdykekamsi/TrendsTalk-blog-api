@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler");
-const Post = require("../modules/postModule");
+const Post = require("../models/postModel");
 
 // Method POST
 // Endpoint {baseUrl}/posts/:postID/like

@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
-const Category = require("../modules/categoryModule");
-const Post = require("../modules/postModule");
+const Category = require("../models/categoryModel");
+const Post = require("../models/postModel");
 
 // Private function to get posts under a category
 const get_cat_posts = asyncHandler(

@@ -14,6 +14,8 @@ schemes: [http,https]
 tags:
   - name: post
     description: All endpoints relating to posts
+  - name: auth
+    description: All endpoints responsible for authorization
 
 paths:
 
@@ -44,22 +46,36 @@ paths:
           description: Success
         500:
           description: Internal Server Error
-
     post:
       tags:
         - post
       summary: Create a new post
       requestBody:
+        required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-             $ref: '#/components/schemas/Post'
-             required: true
-             description: The post to create   
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                category:
+                  type: string
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
       responses:
-        200:
+        '201':
           description: Success
-        400:
+        '400':
           description: Bad request
       security:
         - BearerAuth: []
@@ -86,6 +102,19 @@ paths:
           description: Post not Found
         400:
           description: Bad Request
+  /posts/feed:
+    get:
+      tags:
+        - post
+      summary: Get list of posts based on user's preference
+      description: Monitors user's activities on posts and returning posts similar to users prefence.
+      responses:
+        200:
+          description: Success
+        400:
+          description: Bad Request
+      security:
+        - BearerAuth: []
 
   /posts/{id}:
     get:
@@ -112,6 +141,103 @@ paths:
           description: Internal Server Error
       security:
         - BearerAuth: []
+
+  /posts/{id}/like:
+    post:
+      tags:
+        - post
+      summary: Leaves a like on the selected post by the authorized user
+      parameters:
+        - name: id
+          in: path
+          description: Specify the Id of the post you wish to like
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        201:
+          description: Success
+        404:
+          description: Resource not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+    get:
+      tags:
+        - post
+      summary: fetch all likes on the specified post
+      parameters:
+        - name: id
+          in: path
+          description: Specify the Id of the post you wish to like
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Resource not found
+        500:
+          description: Internal Server Error
+  /posts/{id}/comments:
+    post:
+      tags:
+        - post
+      summary: Leaves a comment on the specified post by the authorized user
+      parameters:
+        - name: id
+          in: path
+          description: Specify the Id of the post you wish to comment
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+             $ref: '#/components/schemas/Comment'
+             required: true  
+      responses:
+        201:
+          description: Success
+        404:
+          description: Resource not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+    get:
+      tags:
+        - post
+      summary: fetch all comments on the specified post
+      parameters:
+        - name: id
+          in: path
+          description: Specify the Id of the post you wish to comment
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Resource not found
+        500:
+          description: Internal Server Error
 
 components:
   schemas:
@@ -209,6 +335,50 @@ components:
           - "sample"
           - "example"
         category: 65fad9528653a1ac7366cffe
+    
+    Comment:
+      type: object
+      required:
+        - content
+      properties:
+        post:
+          type: string
+          description: Unique identifier for the post.
+        user:
+          type: array
+          items:
+            type: string
+          description: Comments on the post.
+        likes:
+          type: array
+          items:
+            type: object
+            properties:
+              liker:
+                type: string
+                description: ID of the user who liked the post.
+              timestamp:
+                type: string
+                format: date-time
+                description: Timestamp when the like was added.
+          description: Users who liked the comment.
+        dislikes:
+          type: array
+          items:
+            type: object
+            properties:
+              disliker:
+                type: string
+                description: ID of the user who disliked the post.
+              timestamp:
+                type: string
+                format: date-time
+                description: Timestamp when the dislike was added.
+          description: Users who disliked the comment.
+          type: string
+          description: ID of the category associated with the post.
+      example:
+        content: "This is a sample post comment."
 
   securitySchemes:
     BearerAuth:
