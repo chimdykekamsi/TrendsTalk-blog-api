@@ -118,6 +118,7 @@ const createPost = asyncHandler(
             throw new Error("You are not authorized to create a post \n Activate your account to become a blogger");
         }else{
             const _category = await Category.findById(category);
+            console.log({_category,category});
             if (!_category) {
                 res.status(404);
                 throw new Error("Category Selected for this post does not exist")
