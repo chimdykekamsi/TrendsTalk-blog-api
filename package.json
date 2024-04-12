@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/chimdykekamsi/TrendsTalk-blog-api#readme",
   "dependencies": {
-    "cloudinary": "^2.0.1",
+    "cloudinary": "^2.1.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",

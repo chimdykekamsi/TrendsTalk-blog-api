@@ -107,9 +107,8 @@ const getAllPosts = asyncHandler(
 const createPost = asyncHandler(
     async (req, res, next) => {
     
-        const {title,content,tags,category} = req.body;
-        const images = req.files;
-        console.log({images});
+        const { title, content, tags, category, images } = req.body;
+
         if (!title || !content || !tags || !category || !images || images.length < 1) {
             res.status(400);
             throw new Error("All fields are required!");
@@ -121,14 +120,13 @@ const createPost = asyncHandler(
             throw new Error("You are not authorized to create a post \n Activate your account to become a blogger");
         }else{
             const _category = await Category.findById(category);
-            console.log({_category,category});
             if (!_category) {
                 res.status(404);
                 throw new Error("Category Selected for this post does not exist")
             }
             const imageObjects = images.map(image => ({
                 caption: path.parse(image.originalname).name, 
-                url: `${process.env.APP_URL}/uploads/posts/${image.filename}`
+                url: image.url
             }));
     
             const post = await Post.create({

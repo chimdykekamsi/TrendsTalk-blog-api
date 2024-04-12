@@ -3,13 +3,17 @@ const validateToken = require("../middlewares/validateTokenHandler");
 const { getAllPosts, createPost, getPost, searchPosts, feed } = require("../controllers/postController");
 const { likePost, fetchLikes } = require("../controllers/likeController");
 const { getAllComments, createComment } = require("../controllers/commentController");
-const upload = require("../middlewares/fileUploadMiddleware");
+const uploadImagesToCloudinary = require("../middlewares/uploadToCloudinary");
+const multer = require('multer');
+
+// Set up multer middleware
+const upload = multer({ dest: 'uploads/' }); 
 
 const router = express.Router();
 
 router.route("/")
     .get(getAllPosts)
-    .post(validateToken,upload.array('images'),createPost);
+    .post(validateToken,upload.array('images'),uploadImagesToCloudinary,createPost);
 
 router.get('/search',searchPosts);
 router.get('/feed',validateToken,feed)

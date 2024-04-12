@@ -23,7 +23,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(errorHandler);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -33,6 +32,7 @@ app.use('/api/categories', categoryRoute);
 
 
 app.use("/docs",swaggerUi.serve,swaggerUi.setup(swaggerJsDocs));
+app.use(errorHandler);
 
 _db().then(() => {
     app.listen(PORT, () => {

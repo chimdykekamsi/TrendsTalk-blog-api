@@ -56,6 +56,12 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - title
+                - content
+                - tags
+                - category
+                - images
               properties:
                 title:
                   type: string
@@ -77,6 +83,10 @@ paths:
           description: Success
         '400':
           description: Bad request
+        '500':
+          description: Internal Server Error
+        '401':
+          description: Unauthorized Access
       security:
         - BearerAuth: []
 
