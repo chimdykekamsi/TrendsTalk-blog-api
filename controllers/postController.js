@@ -60,44 +60,55 @@ const filteredPosts = asyncHandler(async (req) => {
 // Desc Get all posts
 // access Public
 
-const getAllPosts = asyncHandler(
-    async (req, res, next) => {
-        let _posts = [];
+const getAllPosts = asyncHandler(async (req, res, next) => {
+    let _posts = [];
 
-        if (req.query.tags || req.query.author) {
-            _posts = await filteredPosts(req);
-            
-            if (_posts.length < 1) {
-                res.status(404);
-                throw new Error("No post mmatches your query")
-            }
-        }else{
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit)||10;
-            const skip = (page - 1) * limit;
-            const posts = await Post.find().populate('author', 'username').populate('category','title').sort({createdAt: -1}).skip(skip).limit(limit);
+    if (req.query.tags || req.query.author) {
+        _posts = await filteredPosts(req);
 
-            _posts = posts.map((post) => {
-                return {
-                    id: post.id,
-                    author: post.author.username,
-                    title: post.title,
-                    content: post.content,
-                    category: post.category.title || null,
-                    tags: post.tags,
-                    date:post.createdAt,
-                    viewsCount: post.views.length, // Using virtual property
-                    likesCount: post.likes.length, // Using virtual property
-                    dislikesCount: post.dislikes.length, // Using virtual property
-                    commentsCount: post.comments.length
-                };
-            });
+        if (_posts.length < 1) {
+            return res.status(404).json({ message: "No post matches your query", posts: [] });
         }
+    } else {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
-        res.status(200).json(_posts);
+        const [posts, totalPosts] = await Promise.all([
+            Post.find()
+                .populate('author', 'username')
+                .populate('category', 'title')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit),
+            Post.countDocuments() // Get total count of posts
+        ]);
 
+        _posts = posts.map((post) => {
+            return {
+                id: post.id,
+                author: post.author.username,
+                title: post.title,
+                content: post.content,
+                category: post.category?.title || null,
+                tags: post.tags,
+                date: post.createdAt,
+                viewsCount: post.views.length,
+                likesCount: post.likes.length,
+                dislikesCount: post.dislikes.length,
+                commentsCount: post.comments.length
+            };
+        });
+
+        // Add pagination information to response headers
+        res.set('X-Total-Count', totalPosts);
+        res.set('X-Page', page);
+        res.set('X-Limit', limit);
     }
-);
+
+    return res.status(200).json(_posts);
+});
+
 
 // Method POST
 // Endpoint {baseUrl}/posts
