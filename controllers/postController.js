@@ -87,7 +87,7 @@ const getAllPosts = asyncHandler(async (req, res, next) => {
         _posts = posts.map((post) => {
             return {
                 id: post.id,
-                author: post.author.username,
+                author: post.author ? post.author.username : post.author, 
                 title: post.title,
                 content: post.content,
                 category: post.category?.title || null,
