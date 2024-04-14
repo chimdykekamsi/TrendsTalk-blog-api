@@ -11,18 +11,20 @@ const getAllComments = asyncHandler(
     async(req,res,next)=>{
         let _comments = [];
         const {postID} = req.params;
-        const comments = await Comment.find({post:postID}).populate('user','username');
-
-        if (!comments) {
+        const post = await Post.findById(postID);
+        if (!post) {
             res.status(404);
-            throw new Error("Comments not found");
-        };
+            throw new Error("Post requested not found");
+        }
+        const comments = await Comment.find({post:postID}).populate('user','username').populate("post","title");
+
 
         _comments = comments.map((_comment) => {
             const {user,post,comment,likes,dislikes} = _comment;
             return{
                 user: user.username,
                 comment,
+                post: post.title,
                 likes,
                 likeCount: likes.length,
                 dislikes,

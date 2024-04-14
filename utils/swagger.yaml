@@ -128,6 +128,7 @@ paths:
           description: Post not Found
         400:
           description: Bad Request
+  
   /posts/feed:
     get:
       tags:
@@ -156,6 +157,52 @@ paths:
             type: string
             items:
               type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+    put:
+      tags:
+        - post
+      summary: Update specific post with data provided in request
+      parameters:
+        - name: id
+          in: path
+          description: Specify the Id of the post to update
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                category:
+                  type: string
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
       responses:
         200:
           description: Success

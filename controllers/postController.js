@@ -355,10 +355,75 @@ const feed = asyncHandler(
     }
 );
 
+// Method PUT
+// Endpoint {baseUrl}/posts/:postId
+// Fetch and update post based on the Id requested
+// Access Post Author
+
+const updatePost = asyncHandler(
+    async (req, res, next) => {
+        const newPostObject = {};
+        const postId = req.params.postID;
+        const { title, content, tags, category, images } = req.body;
+        const post = await Post.findById(postId).populate("author","username");
+
+        if (!post) {
+            res.status(404);
+            throw new Error("Post not found");
+        }
+        
+        if (req.user.id !== post.author.id) {
+            res.status(401);
+            throw new Error("Unauthorized Access Only Post authors can update post");
+        }
+        if (title && title.length !== 0) {
+            newPostObject.title = title;
+        }
+        if (content && content.length !== 0) {
+            newPostObject.content = content;
+        }
+        if (tags && tags.length !== 0) {
+            newPostObject.tags = tags;
+        }
+        if (category && category.length !== 0) {
+            const _category = await Category.findById(category);
+            if (!_category) {
+                res.status(404);
+                throw new Error("Category Selected for this post does not exist")
+            }
+            newPostObject.category = category;
+        }
+        if (images && images.length !== 0) {
+            const imageObjects = images.map(image => ({
+                caption: path.parse(image.originalname).name, 
+                url: image.url
+            }));
+            newPostObject.images = imageObjects;
+        }
+
+        if (Object.keys(newPostObject).length < 1) {
+            return res.status(200)
+                .json({
+                    message: "Nothing to update",
+                    post
+                });            
+        }
+
+        Object.assign(post, newPostObject);
+        await post.save();
+
+        res.status(200).json({
+            message: "Post updated successfully",
+            post
+        });
+    }
+);
+
 module.exports = {
     getAllPosts,
     createPost,
     getPost,
     searchPosts,
-    feed
+    feed,
+    updatePost
 }
