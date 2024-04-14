@@ -46,7 +46,8 @@ const filteredPosts = asyncHandler(async (req) => {
             viewCount: post.views.length,
             likeCount: post.likes.length,
             dislikeCount: post.dislikes.length,
-            commentsCount: post.comments.length
+            commentsCount: post.comments.length,
+            images: post.images
         };
     });
 
@@ -60,55 +61,45 @@ const filteredPosts = asyncHandler(async (req) => {
 // Desc Get all posts
 // access Public
 
-const getAllPosts = asyncHandler(async (req, res, next) => {
-    let _posts = [];
+const getAllPosts = asyncHandler(
+    async (req, res, next) => {
+        let _posts = [];
 
-    if (req.query.tags || req.query.author) {
-        _posts = await filteredPosts(req);
+        if (req.query.tags || req.query.author) {
+            _posts = await filteredPosts(req);
+            
+            if (_posts.length < 1) {
+                res.status(404);
+                throw new Error("No post mmatches your query")
+            }
+        }else{
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit)||10;
+            const skip = (page - 1) * limit;
+            const posts = await Post.find().populate('author', 'username').populate('category','title').sort({createdAt: -1}).skip(skip).limit(limit);
 
-        if (_posts.length < 1) {
-            return res.status(404).json({ message: "No post matches your query", posts: [] });
+            _posts = posts.map((post) => {
+                return {
+                    id: post.id,
+                    author: post.author?.username,
+                    title: post.title,
+                    content: post.content,
+                    category: post.category.title || null,
+                    tags: post.tags,
+                    date:post.createdAt,
+                    viewsCount: post.views.length, // Using virtual property
+                    likesCount: post.likes.length, // Using virtual property
+                    dislikesCount: post.dislikes.length, // Using virtual property
+                    commentsCount: post.comments.length,
+                    images: post.images
+                };
+            });
         }
-    } else {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
 
-        const [posts, totalPosts] = await Promise.all([
-            Post.find()
-                .populate('author', 'username')
-                .populate('category', 'title')
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit),
-            Post.countDocuments() // Get total count of posts
-        ]);
+        res.status(200).json(_posts);
 
-        _posts = posts.map((post) => {
-            return {
-                id: post.id,
-                author: post.author ? post.author.username : post.author, 
-                title: post.title,
-                content: post.content,
-                category: post.category?.title || null,
-                tags: post.tags,
-                date: post.createdAt,
-                viewsCount: post.views.length,
-                likesCount: post.likes.length,
-                dislikesCount: post.dislikes.length,
-                commentsCount: post.comments.length
-            };
-        });
-
-        // Add pagination information to response headers
-        res.set('X-Total-Count', totalPosts);
-        res.set('X-Page', page);
-        res.set('X-Limit', limit);
     }
-
-    return res.status(200).json(_posts);
-});
-
+);
 
 // Method POST
 // Endpoint {baseUrl}/posts
@@ -124,7 +115,11 @@ const createPost = asyncHandler(
             res.status(400);
             throw new Error("All fields are required!");
         }
-
+        const author = await User.findById(req.user.id);
+        if (!author) {
+            res.status(404);
+            throw new Error("Error finding author for this user login with an apropriate user");
+        }
         const role = req.user.role;
         if (!role || role == "reader") {
             res.status(401);
@@ -209,7 +204,8 @@ const getPost = asyncHandler(async (req, res, next) => {
             dislikes: post.dislikes,
             dislikeCount: post.dislikes.length,
             comments: post.comments,
-            commentsCount: post.comments.length
+            commentsCount: post.comments.length,
+            images: post.images
         };
 
         res.status(200).json(_post);
@@ -260,6 +256,7 @@ const searchPosts = asyncHandler(async (req, res, next) => {
             views: post.views.length,
             likes: post.likes.length,
             dislikes: post.dislikes.length,
+            images: post.images
         };
     });
     if (_posts.length < 1) {
@@ -323,7 +320,8 @@ const feed = asyncHandler(
                     viewsCount: post.views.length,
                     likesCount: post.likes.length,
                     dislikesCount: post.dislikes.length,
-                    commentsCount: post.comments.length
+                    commentsCount: post.comments.length,
+                    images: post.images
                 }));
     
                 return res.status(200).json(formattedFeed);
@@ -344,7 +342,8 @@ const feed = asyncHandler(
                 viewsCount: post.views.length,
                 likesCount: post.likes.length,
                 dislikesCount: post.dislikes.length,
-                commentsCount: post.comments.length
+                commentsCount: post.comments.length,
+                images: post.images
             }));
     
             res.status(200).json(formattedFeed);

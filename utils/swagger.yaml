@@ -7,7 +7,7 @@ info:
     email: ckamsi04@gmail.com
 servers:
   - url: http://localhost:3000/api
-  # - url: https://trendstalk-blog-api.onrender.com/api
+  - url: https://trendstalk-blog-api.onrender.com/api
 
 schemes: [http,https]
 
@@ -36,6 +36,22 @@ paths:
         - name: author
           in: query
           description: filter the post returned by favorite author
+          required: false
+          schema:
+            type: string
+            items:
+              type: string
+        - name: limit
+          in: query
+          description: Specify the limit for posts fetched per page default is 10
+          required: false
+          schema:
+            type: string
+            items:
+              type: string
+        - name: page
+          in: query
+          description: specify the page you wish to fetch default is 1
           required: false
           schema:
             type: string
