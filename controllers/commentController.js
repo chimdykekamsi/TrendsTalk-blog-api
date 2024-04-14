@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Comment = require("../models/commentModel");
 const Post = require("../models/postModel");
+const User = require("../models/userModel");
 
 // Method GET
 // Endpoint {baseUrl}/posts/:postID/comments
@@ -48,6 +49,12 @@ const createComment = asyncHandler(
         const {content} = req.body; 
         const {id} = req.user;
 
+        const author = await User.findById(id);
+        if (!author) {
+            res.status(404);
+            throw new Error("Error finding author for this user \n login with an apropriate user");
+        }
+
         if (!content) {
             res.status(401);
             throw new Error("All fields are required");
@@ -61,7 +68,7 @@ const createComment = asyncHandler(
         }
         const comment = await Comment.create({
             post: post.id,
-            user: id,
+            user: author,
             comment: content
         });
 

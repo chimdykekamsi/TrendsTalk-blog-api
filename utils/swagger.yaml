@@ -311,6 +311,8 @@ paths:
           description: Resource not found
         500:
           description: Internal Server Error
+      security:
+        - BearerAuth: []
 
 components:
   schemas:
