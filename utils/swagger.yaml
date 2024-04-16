@@ -214,12 +214,36 @@ paths:
           description: Internal Server Error
       security:
         - BearerAuth: []
+    delete:
+      tags:
+        - post
+      summary: Delete the post that matches the provided id
+      parameters:
+        - name: id
+          in: path
+          description: Specify the Id of the post to delete
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
 
   /posts/{id}/like:
     post:
       tags:
         - post
-      summary: Leaves a like on the selected post by the authorized user
+      summary: toggles like and unlike on the selected post by the authorized user
       parameters:
         - name: id
           in: path

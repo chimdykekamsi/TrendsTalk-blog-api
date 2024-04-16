@@ -26,12 +26,11 @@ const uploadImagesToCloudinary = async (req, res, next) => {
                     originalname: image.originalname
                 }; // Get the URL of the uploaded image
             }));
+            
 
-            // Attach the Cloudinary URLs to the request body
             req.body.images = uploadedImages;
             images.forEach(image => {
                 const filePath = image.path;
-                console.log({filePath});
                 fs.unlinkSync(filePath);
             });
             next();

@@ -108,7 +108,9 @@ const getAllPosts = asyncHandler(
 
 const createPost = asyncHandler(
     async (req, res, next) => {
-    
+        return res.status(200).json(
+            req.body
+        );
         const { title, content, tags, category, images } = req.body;
 
         if (!title || !content || !tags || !category || !images || images.length < 1) {
@@ -184,7 +186,6 @@ const getPost = asyncHandler(async (req, res, next) => {
         const hasViewed = post.views.some((view) => view.viewer.equals(viewerID));
 
         if (!hasViewed && viewerID !== "unsigned") {
-            // If the viewer hasn't viewed the post, increment views and add the viewer
             post.views.push({ viewer: viewerID });
             await post.save();
         }
@@ -371,7 +372,7 @@ const updatePost = asyncHandler(
             res.status(404);
             throw new Error("Post not found");
         }
-        
+
         if (req.user.id !== post.author.id) {
             res.status(401);
             throw new Error("Unauthorized Access Only Post authors can update post");
@@ -419,11 +420,38 @@ const updatePost = asyncHandler(
     }
 );
 
+const deletePost = asyncHandler(
+    async(req,res,next)=>{
+        const {postID} = req.params;
+        const post = await Post.findById(postID).populate("author","username");
+
+        if (!post) {
+            res.status(404);
+            throw new Error("Post not found");
+        }
+
+        if (req.user.id !== post.author.id) {
+            res.status(401);
+            throw new Error("Unauthorized Access Only Post authors can delete this post");
+        }
+
+        post.delete();
+        post.save();
+
+        return res.status(201)
+            .json({
+                message: "Deleted post"
+            })
+
+    }
+)
+
 module.exports = {
     getAllPosts,
     createPost,
     getPost,
     searchPosts,
     feed,
-    updatePost
+    updatePost,
+    deletePost
 }
