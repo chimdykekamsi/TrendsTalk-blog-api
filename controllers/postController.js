@@ -109,17 +109,22 @@ const getAllPosts = asyncHandler(
 const createPost = asyncHandler(
     async (req, res, next) => {
     
-        const { title, content, tags, category, images } = req.body;
+        const { title, content, category, images } = req.body;
+        let tags = req.body.tags;
 
         if (!title || !content || !tags || !category || !images || images.length < 1) {
             res.status(400);
             throw new Error("All fields are required!");
+        }
+        if (!Array.isArray(tags)) {
+            tags = tags.split(",");
         }
         const author = await User.findById(req.user.id);
         if (!author) {
             res.status(404);
             throw new Error("Error finding author for this user login with an apropriate user");
         }
+
         const role = req.user.role;
         if (!role || role == "reader") {
             res.status(401);
