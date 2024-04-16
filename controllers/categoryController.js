@@ -18,7 +18,8 @@ const get_cat_posts = asyncHandler(
                 viewsCount: post.views.length, // Using virtual property
                 likesCount: post.likes.length, // Using virtual property
                 dislikesCount: post.dislikes.length, // Using virtual property
-                commentsCount: post.comments.length
+                commentsCount: post.comments.length,
+                images: post.images
             }
         });
         return _categoryPosts;

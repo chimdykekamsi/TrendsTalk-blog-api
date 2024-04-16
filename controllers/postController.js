@@ -108,9 +108,7 @@ const getAllPosts = asyncHandler(
 
 const createPost = asyncHandler(
     async (req, res, next) => {
-        return res.status(200).json(
-            req.body
-        );
+    
         const { title, content, tags, category, images } = req.body;
 
         if (!title || !content || !tags || !category || !images || images.length < 1) {
@@ -152,7 +150,7 @@ const createPost = asyncHandler(
                 return res.status(201)
                     .json({
                         title: "Post created",
-                        messge: "Post has been created and stored",
+                        message: "Post has been created and stored",
                         post: {
                             title,
                             content,
