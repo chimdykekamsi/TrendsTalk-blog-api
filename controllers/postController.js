@@ -175,7 +175,7 @@ const createPost = asyncHandler(
 
 const getPost = asyncHandler(async (req, res, next) => {
     const postID = req.params.postID;
-    const viewerID = req.user.id;
+    const viewerID = req.user.id || "unsigned";
 
     try {
         const post = await Post.findById(postID).populate('category','title').populate('author', 'username');
