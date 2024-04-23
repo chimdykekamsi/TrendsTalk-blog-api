@@ -24,7 +24,7 @@ router.route("/:postID/like")
     
 router.route('/:postID/comments')
     .post(validateToken,createComment)
-    .get(validateToken,getAllComments)
+    .get(getAllComments)
 
 router.route("/:postID")
     .get(validateToken,getPost)
