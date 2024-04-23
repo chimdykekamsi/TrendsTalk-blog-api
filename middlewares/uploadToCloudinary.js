@@ -45,4 +45,18 @@ const uploadImagesToCloudinary = async (req, res, next) => {
         });
     }
 };
- module.exports = uploadImagesToCloudinary;
+
+const deleteImagesFromCloudinary = async (images) => {
+    const imageDeletionPromises = images.map(image => {
+        const publicId = image.url.split('/').pop().split('.')[0];
+        return cloudinary.uploader.destroy(publicId);
+    });
+    
+    await Promise.all(imageDeletionPromises);
+};
+
+
+ module.exports = {
+    uploadImagesToCloudinary,
+    deleteImagesFromCloudinary
+ };

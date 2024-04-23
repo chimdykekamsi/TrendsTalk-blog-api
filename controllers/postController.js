@@ -3,6 +3,7 @@ const Post = require("../models/postModel");
 const User = require("../models/userModel");
 const Category = require("../models/categoryModel");
 const path = require("path");
+const { deleteImagesFromCloudinary } = require("../middlewares/uploadToCloudinary");
 require("dotenv").config();
 
 
@@ -37,7 +38,7 @@ const filteredPosts = asyncHandler(async (req) => {
     let _posts = posts.map((post) => {
         return {
             id: post.id,
-            author: post.author.username,
+            author: post.author ? post.author.username : "Deleted User",
             title: post.title,
             content: post.content,
             date: post.createdAt,
@@ -81,7 +82,7 @@ const getAllPosts = asyncHandler(
             _posts = posts.map((post) => {
                 return {
                     id: post.id,
-                    author: post.author?.username,
+                    author: post.author ? post.author.username : "Deleted User",
                     title: post.title,
                     content: post.content,
                     category: post.category.title || null,
@@ -194,7 +195,7 @@ const getPost = asyncHandler(async (req, res, next) => {
         }
 
         const _post = {
-            author: post.author.username, // Access username through the populated author field
+            author: post.author ? post.author.username : "Deleted User",// Access username through the populated author field
             title: post.title,
             content: post.content,
             category: post.category.title,
@@ -252,7 +253,7 @@ const searchPosts = asyncHandler(async (req, res, next) => {
     _posts = posts.map((post) => {
         return {
             id: post._id,
-            author: post.author.username,
+            author: post.author ? post.author.username : "Deleted User",
             title: post.title,
             content: post.content,
             date: post.createdAt,
@@ -316,7 +317,7 @@ const feed = asyncHandler(
                 // Format the response as needed
                 const formattedFeed = posts.map(post => ({
                     id: post.id,
-                    author: post.author.username,
+                    author: post.author ? post.author.username : "Deleted User",
                     title: post.title,
                     content: post.content,
                     date: post.createdAt,
@@ -338,7 +339,7 @@ const feed = asyncHandler(
             // Format the response as needed
             const formattedFeed = userFeed.map(post => ({
                 id: post.id,
-                author: post.author.username,
+                author: post.author ? post.author.username : "Deleted User",
                 title: post.title,
                 content: post.content,
                 date: post.createdAt,
@@ -437,9 +438,9 @@ const deletePost = asyncHandler(
             res.status(401);
             throw new Error("Unauthorized Access Only Post authors can delete this post");
         }
-
-        post.delete();
-        post.save();
+        const imagesToDelete = post.images;
+        await deleteImagesFromCloudinary(imagesToDelete);
+        await Post.findByIdAndDelete(postID);
 
         return res.status(201)
             .json({
