@@ -12,10 +12,16 @@ servers:
 schemes: [http,https]
 
 tags:
+  - name: auth
+    description: All endpoints responsible for user authorization
+  - name: category
+    description: All endpoints relating for categories
   - name: post
     description: All endpoints relating to posts
-  - name: auth
-    description: All endpoints responsible for authorization
+  - name: like
+    description: All endpoints relating to post likes
+  - name: comment
+    description: All endpoints relating to post comments
 
 paths:
 
@@ -239,10 +245,89 @@ paths:
       security:
         - BearerAuth: []
 
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: Provide basic information for user registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+              required:
+                - email
+                - password
+                - username
+              properties:
+                username:
+                  type: string
+                  description: A unique username for authentication
+                password:
+                  type: string
+                  description: A secure password for authentication
+                email:
+                  type: string
+                  description: A unique email for authentication
+      responses:
+        '201':
+          description: Success
+        '400':
+          description: Bad request
+        '500':
+          description: Internal Server Error
+  
+
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: Provide basic information for user login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                password:
+                  type: string
+                  description: A secure password for authentication
+                email:
+                  type: string
+                  description: A unique email for authentication
+      responses:
+        '201':
+          description: Success
+        '400':
+          description: Bad request
+        '500':
+          description: Internal Server Error
+  
+
+  /auth/get_current_user:
+    get:
+      tags:
+        - auth
+      summary: This route authenticates the user token and responds with the verified user's data
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+  
   /posts/{id}/like:
     post:
       tags:
-        - post
+        - like
       summary: toggles like and unlike on the selected post by the authorized user
       parameters:
         - name: id
@@ -266,7 +351,7 @@ paths:
         - BearerAuth: []
     get:
       tags:
-        - post
+        - like
       summary: fetch all likes on the specified post
       parameters:
         - name: id
@@ -284,10 +369,11 @@ paths:
           description: Resource not found
         500:
           description: Internal Server Error
+  
   /posts/{id}/comments:
     post:
       tags:
-        - post
+        - comment
       summary: Leaves a comment on the specified post by the authorized user
       parameters:
         - name: id
@@ -317,7 +403,7 @@ paths:
         - BearerAuth: []
     get:
       tags:
-        - post
+        - comment
       summary: fetch all comments on the specified post
       parameters:
         - name: id
@@ -337,6 +423,231 @@ paths:
           description: Internal Server Error
       security:
         - BearerAuth: []
+
+  /posts/{postId}/comments/{commentId}:
+    put:
+      tags:
+        - comment
+      summary: Updates a comment on the specified post by the authorized user
+      parameters:
+        - name: postId
+          in: path
+          description: Specify the Id of the post
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+        - name: commentId
+          in: path
+          description: Specify the Id of the comment to update
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+    get:
+      tags:
+        - comment
+      summary: Gets a comment on the specified post by the authorized user
+      parameters:
+        - name: postId
+          in: path
+          description: Specify the Id of the post
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+        - name: commentId
+          in: path
+          description: Specify the Id of the comment to fetch
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+          
+    delete:
+      tags:
+        - comment
+      summary: Delete a comment on the specified post by the authorized user
+      parameters:
+        - name: postId
+          in: path
+          description: Specify the Id of the post
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+        - name: commentId
+          in: path
+          description: Specify the Id of the comment to delete
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+          
+  /categories:
+    get:
+      tags:
+        - category
+      summary: Fetch all existing categories
+      responses:
+        200:
+          description: Success
+        500:
+          description: Internal Server Error
+    post:
+      tags:
+        - category
+      summary: Create a new category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+      responses:
+        '201':
+          description: Success
+        '400':
+          description: Bad request
+        '500':
+          description: Internal Server Error
+        '401':
+          description: Unauthorized Access
+      security:
+        - BearerAuth: []
+
+  /categories/{categoryTitle}:
+    get:
+      tags:
+        - category
+      summary: Fetch a single category by category title
+      parameters:
+        - name: categoryTitle
+          in: path
+          description: Specify the title of the category you wish to fetch
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+    put:
+      tags:
+        - category
+      summary: Update category title with title provided in the request
+      parameters:
+        - name: categoryTitle
+          in: path
+          description: Specify the title of the category to update
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+    delete:
+      tags:
+        - category
+      summary: Delete the category that matches the provided title
+      parameters:
+        - name: categoryTitle
+          in: path
+          description: Specify the title of the category to delete
+          required: true
+          schema:
+            type: string
+            items:
+              type: string
+      responses:
+        200:
+          description: Success
+        404:
+          description: Post not found
+        401:
+          description: Unauthorized Access
+        500:
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
 
 components:
   schemas:
@@ -478,7 +789,42 @@ components:
           description: ID of the category associated with the post.
       example:
         content: "This is a sample post comment."
+    
+    Category:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: title for the category.
+        posts:
+          type: array
+          items:
+            type: string
+          description: All post Id under this category.
+      example:
+        content: "This is a sample post category."
 
+    User:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          description: A unique username for authentication
+        password:
+          type: string
+          description: A secure password for authentication
+        email:
+          type: string
+          description: A unique email for authentication
+        role:
+          type: string
+          description: Specifies the role of the user
+  
   securitySchemes:
     BearerAuth:
       type: http

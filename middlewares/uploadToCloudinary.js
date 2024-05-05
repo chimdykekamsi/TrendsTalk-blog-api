@@ -46,15 +46,29 @@ const uploadImagesToCloudinary = async (req, res, next) => {
     }
 };
 
-const deleteImagesFromCloudinary = async (images) => {
-    const imageDeletionPromises = images.map(image => {
-        const publicId = image.url.split('/').pop().split('.')[0];
-        return cloudinary.uploader.destroy(publicId);
+const deleteImagesFromCloudinary =  (images) => {
+    const assets = images.map((image) => {
+        // Ensure the image and its URL are defined
+        if (image && image.url) {
+            // Extract the public ID from the URL
+            const url = new URL(image.url);
+            const pathSegments = url.pathname.split('/'); 
+            const publicID = pathSegments.slice(5).join('/').replace(/\.\w+$/, '');
+            return publicID;
+        } else {
+            console.log("Null image or missing URL.");
+            return null;
+        }
     });
-    
-    await Promise.all(imageDeletionPromises);
+    cloudinary.api
+    .delete_resources(assets)
+    .then(result=>{
+        return result;
+    })
+    .catch(err =>{
+        throw new Error("Post images failed to delete");
+    })
 };
-
 
  module.exports = {
     uploadImagesToCloudinary,

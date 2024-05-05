@@ -5,6 +5,7 @@ const Category = require("../models/categoryModel");
 const path = require("path");
 const { deleteImagesFromCloudinary } = require("../middlewares/uploadToCloudinary");
 require("dotenv").config();
+const cloudinary = require("cloudinary").v2;
 
 
 // Private function to filter Posts based on queries like tags, search etc.
@@ -424,6 +425,10 @@ const updatePost = asyncHandler(
     }
 );
 
+// Method DELETE
+// Endpoint {baseUrl}/posts/:postId
+// Fetch and update post based on the Id requested
+// Access Post Author
 const deletePost = asyncHandler(
     async(req,res,next)=>{
         const {postID} = req.params;
@@ -434,12 +439,13 @@ const deletePost = asyncHandler(
             throw new Error("Post not found");
         }
 
-        if (req.user.id !== post.author.id) {
+        if (req.user.id !== post.author.id && req.user.role !== "admin") {
             res.status(401);
             throw new Error("Unauthorized Access Only Post authors can delete this post");
         }
-        const imagesToDelete = post.images;
-        await deleteImagesFromCloudinary(imagesToDelete);
+         // Delete images from Cloudinary
+        await deleteImagesFromCloudinary(post.images);
+
         await Post.findByIdAndDelete(postID);
 
         return res.status(201)

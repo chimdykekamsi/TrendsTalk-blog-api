@@ -95,6 +95,20 @@ const createCategory = asyncHandler(
             res.status(401);
             throw new Error("Unauthorized access");
         }
+        
+        // const containsSpaces = /\s/.test(title);
+
+        // check if category title already exists make sure its case insensitive
+        const categoryExists  = await Category.findOne({ title: { $regex: new RegExp('^' + title + '$', 'i') } });
+
+        // if (containsSpaces) {
+        //     res.status(400);
+        //     throw new Error("Title cannot contain spaces");
+        // }
+        if (categoryExists) {
+            res.status(400);
+            throw new Error("Category already exists");
+        }
 
         const newCategory = await Category.create({
             title: title
@@ -107,5 +121,68 @@ const createCategory = asyncHandler(
     }
 )
 
+// Method PUT
+// Endpoint {baseUrl}/categories/:categoryTitle
+// Desc Fetch category by title and replace the title with the title in the request body
+// Access Admins only
 
-module.exports = {getAllCategories, createCategory, getCategory}
+const updateCategory = asyncHandler(
+    async(req, res) => {
+        const {categoryTitle} = req.params;
+        const {title} = req.body;
+        const {role} = req.user;
+        if (!title) {
+            res.status(400);
+            throw new Error("All fields are required!");
+        }
+        if (role!== "admin") {
+            res.status(401);
+            throw new Error("Unauthorized access");
+        }
+        const category = await Category.findOne({ title: { $regex: new RegExp('^' + categoryTitle + '$', 'i') } });
+        if (!category) {
+            res.status(404);
+            throw new Error("Category not found");
+        }
+        category.title = title;
+        await category.save();
+        const categoryId = category.id;
+        const posts = await get_cat_posts(categoryId);
+        return res.status(201)
+        .json({
+            title: category.title,
+            posts
+        });
+    });
+
+// Method DELETE
+// Endpoint {baseUrl}/categories/:categoryTitle
+// Desc Fetch category by title and delete the category if there is no post under it
+// Access Admins only
+
+const deleteCategory = asyncHandler(
+    async(req, res) => {
+        const {categoryTitle} = req.params;
+        const {role} = req.user;
+        if (role !== "admin") {
+            res.status(401);
+            throw new Error("Unauthorized access");
+        }
+        const category = await Category.findOne({ title: { $regex: new RegExp('^' + categoryTitle + '$', 'i') } });
+        if (!category) {
+            res.status(404);
+            throw new Error("Category not found");
+        }
+        const categoryId = category._id;
+        const categoryPosts = category.posts;
+        if (categoryPosts.length!== 0) {
+            res.status(400);
+            throw new Error("Category is not empty try migrating all posts to another category before deleting");
+        }
+        await Category.findByIdAndDelete(categoryId);
+        return res.status(200).json({
+            message: "Category deleted"
+        });
+    });
+
+module.exports = {getAllCategories, createCategory, getCategory, updateCategory, deleteCategory}
