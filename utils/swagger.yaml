@@ -6,10 +6,9 @@ info:
   contact:
     email: ckamsi04@gmail.com
 servers:
-  - url: http://localhost:3000/api
   - url: https://trendstalk-blog-api.onrender.com/api
 
-schemes: [http,https]
+schemes: [https]
 
 tags:
   - name: auth
