@@ -31,7 +31,7 @@ app.use('/api/posts', postRoute);
 app.use('/api/categories', categoryRoute);
 
 
-app.use("/docs",swaggerUi.serve,swaggerUi.setup(swaggerJsDocs));
+app.use("/api/docs",swaggerUi.serve,swaggerUi.setup(swaggerJsDocs));
 app.use(errorHandler);
 
 _db().then(() => {
